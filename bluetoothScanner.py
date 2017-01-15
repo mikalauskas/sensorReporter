@@ -25,6 +25,7 @@ import struct
 import array
 import bluetooth
 import bluetooth._bluetooth as bt
+from bluetooth.ble import DiscoveryService
 
 debug = 0
 
@@ -41,7 +42,7 @@ class btSensor:
         self.logger.info("----------Configuring BluetoothSensor: Address = " + self.address + " Destination = " + self.destination)
 
         self.mode = params("Mode")
-        if self.mode != "RSSI" and self.mode != "LOOKUP":
+        if self.mode != "RSSI" and self.mode != "LOOKUP" and self.mode != "BLE":
           self.logger.error("\"%s\" is an unknown MODE, defaulting to RSSI" % (self.mode))
           self.mode = "RSSI"
 
@@ -69,6 +70,16 @@ class btSensor:
         else:
             return "OFF"
 
+    def getBLE(self):
+        """Detecting nearby BLE devices using pybluez experimental BLE addon"""
+        service = DiscoveryService()
+        discover = service.discover(5)
+        devices = [i[0] for i in discover.items()]
+        if self.address in devices:
+            return "ON"
+        else:
+            return "OFF"
+ 
     def getRSSI(self):
         """Detects whether the device is near by or not using RSSI"""
         addr = self.address
@@ -148,6 +159,9 @@ class btSensor:
             
         elif self.mode == "LOOKUP":
             value = self.getPresence()
+
+        elif self.mode == "BLE":
+            value = self.getBLE()
 
         else:
             msg = "Invalid 'mode' specified in 'bluetoothScanner.py' !"
